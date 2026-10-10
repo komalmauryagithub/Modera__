@@ -1,0 +1,49 @@
+:root {
+  /* Scrapbook Color Palette */
+  --bg-cream: #FAF7F2;
+  --bg-cream-soft: #F5EFEB;
+  --bg-card: #FFFFFF;
+  --bg-card-secondary: #FFFDF9;
+
+  /* Pastel Theme Colors */
+  --color-lavender: #E8E1F8;
+  --color-lavender-light: #F3EFFC;
+  --color-lavender-dark: #8E7CC3;
+  --color-muted-purple: #67588B;
+  --color-deep-purple: #483965;
+
+  --color-blush: #FAD2E1;
+  --color-blush-light: #FDE8F0;
+  --color-blush-dark: #D47B97;
+
+  --color-warm-peach: #FDE2D1;
+  --color-sage: #D8E2DC;
+  --color-butter: #FFF1C5;
+
+  /* Text & Border Colors */
+  --text-main: #332B3D;
+  --text-muted: #746781;
+  --text-light: #9F93AD;
+  --border-soft: #EFE7DE;
+  --border-focus: #B8A8DC;
+
+  /* Scrapbook Elements & Shadows */
+  --shadow-sm: 0 2px 6px rgba(103, 88, 139, 0.06);
+  --shadow-polaroid: 0 6px 16px rgba(72, 57, 101, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-polaroid-hover: 0 12px 24px rgba(72, 57, 101, 0.14), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 20px 40px rgba(51, 43, 61, 0.2);
+
+  /* Typography */
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-handwriting: 'Caveat', cursive, sans-serif;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-smooth: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
