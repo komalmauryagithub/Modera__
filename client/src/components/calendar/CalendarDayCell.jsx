@@ -56,6 +56,9 @@ const CalendarDayCell = ({
                 alt=""
                 className="event-chip-thumb"
                 loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             )}
             <span className="event-chip-text">{event.title}</span>

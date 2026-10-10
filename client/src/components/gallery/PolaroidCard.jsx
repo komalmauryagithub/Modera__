@@ -1,19 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, Clock, Tag, Image as ImageIcon } from 'lucide-react';
 import '../../styles/gallery.css';
 
 const PolaroidCard = ({ event, onClick }) => {
+  const [imageError, setImageError] = useState(false);
+
   return (
     <div className="polaroid-scrap-item" onClick={() => onClick(event)}>
       <div className="polaroid-pin"></div>
 
       <div className="polaroid-image-container">
-        {event.imageUrl ? (
+        {event.imageUrl && !imageError ? (
           <img
             src={event.imageUrl}
             alt={event.title}
             className="polaroid-img"
             loading="lazy"
+            onError={() => setImageError(true)}
           />
         ) : (
           <div className="polaroid-placeholder">

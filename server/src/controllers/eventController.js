@@ -69,7 +69,10 @@ export const createEvent = async (req, res, next) => {
 
     if (req.file) {
       try {
-        const uploadResult = await uploadToCloudinary(req.file.buffer, 'memora_events');
+        const uploadResult = await uploadToCloudinary(req.file.buffer, 'memora_events', {
+          mimetype: req.file.mimetype,
+          originalname: req.file.originalname,
+        });
         imageUrl = uploadResult.secure_url;
         imagePublicId = uploadResult.public_id;
       } catch (uploadError) {
@@ -329,7 +332,10 @@ export const updateEvent = async (req, res, next) => {
     if (req.file) {
       // Replaced with a new photo
       try {
-        const uploadResult = await uploadToCloudinary(req.file.buffer, 'memora_events');
+        const uploadResult = await uploadToCloudinary(req.file.buffer, 'memora_events', {
+          mimetype: req.file.mimetype,
+          originalname: req.file.originalname,
+        });
 
         // Delete old image from Cloudinary safely
         if (event.imagePublicId) {

@@ -58,6 +58,7 @@ const EventModal = ({
   const [formErrors, setFormErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState(null);
+  const [modalImageError, setModalImageError] = useState(false);
 
   // Synchronize state when modal opens or active event changes
   useEffect(() => {
@@ -69,6 +70,7 @@ const EventModal = ({
     setFormErrors({});
     setPhotoFile(null);
     setRemoveExistingPhoto(false);
+    setModalImageError(false);
 
     if (event) {
       setFormData({
@@ -273,11 +275,12 @@ const EventModal = ({
             </div>
 
             <div className="polaroid-view-frame">
-              {activeEvent.imageUrl ? (
+              {activeEvent.imageUrl && !modalImageError ? (
                 <img
                   src={activeEvent.imageUrl}
                   alt={activeEvent.title}
                   className="polaroid-view-image"
+                  onError={() => setModalImageError(true)}
                 />
               ) : (
                 <div style={{ padding: '2.5rem 1rem', background: 'var(--color-lavender-light)', borderRadius: '4px', marginBottom: '1rem', color: 'var(--color-muted-purple)' }}>

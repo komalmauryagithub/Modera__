@@ -88,9 +88,15 @@ app.get('/api', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 
-// Optional: Serve compiled frontend in monolithic deployment mode
+// Optional & Uploads static routing
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const uploadsDir = path.resolve(__dirname, '../../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
+
 const clientDistPath = path.resolve(__dirname, '../../client/dist');
 
 if (fs.existsSync(clientDistPath)) {

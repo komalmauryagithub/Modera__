@@ -145,6 +145,9 @@ const UpcomingPage = () => {
                     alt={event.title}
                     className="upcoming-thumb"
                     loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 )}
 
