@@ -6,6 +6,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import PublicRoute from './components/common/PublicRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import CalendarPage from './pages/CalendarPage';
 import DashboardPlaceholder from './pages/DashboardPlaceholder';
 import './App.css';
 
@@ -40,7 +41,7 @@ function App() {
                 path="/"
                 element={
                   <ProtectedRoute>
-                    <DashboardPlaceholder pageTitle="Calendar Dashboard" />
+                    <CalendarPage />
                   </ProtectedRoute>
                 }
               />
