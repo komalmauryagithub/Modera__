@@ -1,3 +1,13 @@
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content {
+  flex: 1;
+}
+
 .setup-container {
   max-width: 760px;
   margin: 3.5rem auto 2rem;
