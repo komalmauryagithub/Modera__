@@ -49,6 +49,12 @@ input:focus, textarea:focus, select:focus {
   outline: none;
 }
 
+/* Accessible focus ring for keyboard navigation */
+:focus-visible {
+  outline: 2.5px solid var(--color-muted-purple) !important;
+  outline-offset: 2px !important;
+}
+
 /* Washi Tape decorative element */
 .washi-tape {
   position: absolute;

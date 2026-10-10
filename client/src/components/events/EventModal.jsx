@@ -89,7 +89,17 @@ const EventModal = ({
       });
       setPhotoPreview(null);
     }
-  }, [isOpen, initialMode, initialDate, event]);
+
+    // Escape key listener for accessible modal closing
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, initialMode, initialDate, event, onClose]);
 
   if (!isOpen) return null;
 
@@ -217,8 +227,14 @@ const EventModal = ({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose} role="presentation">
+      <div
+        className="modal-dialog"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
         <div className="washi-tape"></div>
 
         <button
