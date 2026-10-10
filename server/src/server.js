@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 // Load environment variables
@@ -55,6 +56,9 @@ app.get('/', (req, res) => {
     healthCheck: '/api/health',
   });
 });
+
+// Authentication Routes
+app.use('/api/auth', authRoutes);
 
 // 404 & Error Handling
 app.use(notFound);
