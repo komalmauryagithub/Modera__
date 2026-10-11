@@ -36,29 +36,40 @@ export const uploadToCloudinary = (fileBuffer, folder = 'memora', fileMeta = {})
       cloudName === 'demo_cloud' ||
       cloudName === 'your_cloud_name';
 
-    if (isMock) {
-      const ext = fileMeta?.mimetype
-        ? (fileMeta.mimetype.includes('png') ? '.png' : fileMeta.mimetype.includes('webp') ? '.webp' : '.jpg')
-        : '.jpg';
-      const mockId = `mock_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      const fileName = `${mockId}${ext}`;
-      const filePath = path.join(uploadsDir, fileName);
-
+    const saveLocally = () => {
       try {
+        const ext = fileMeta?.mimetype
+          ? (fileMeta.mimetype.includes('png') ? '.png' : fileMeta.mimetype.includes('webp') ? '.webp' : '.jpg')
+          : '.jpg';
+        const mockId = `mock_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        const fileName = `${mockId}${ext}`;
+
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        const filePath = path.join(uploadsDir, fileName);
         fs.writeFileSync(filePath, fileBuffer);
-        const serverPort = process.env.PORT || 5000;
-        const baseUrl = process.env.SERVER_BASE_URL || `http://localhost:${serverPort}`;
+
+        // Smart public base URL resolution (supports Render HTTPS external URL)
+        let baseUrl =
+          process.env.RENDER_EXTERNAL_URL ||
+          process.env.SERVER_BASE_URL ||
+          `http://localhost:${process.env.PORT || 5000}`;
+        baseUrl = baseUrl.replace(/\/+$/, '');
+
         return resolve({
           secure_url: `${baseUrl}/uploads/${fileName}`,
           public_id: `local_uploads/${mockId}`,
         });
       } catch (err) {
-        console.error('[Local Upload Storage Error]', err);
-        return resolve({
-          secure_url: `http://localhost:5000/uploads/${fileName}`,
-          public_id: `local_uploads/${mockId}`,
-        });
+        console.error('[Local Storage Error]', err);
+        return reject(new Error('Failed to save image locally.'));
       }
+    };
+
+    if (isMock) {
+      return saveLocally();
     }
 
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -74,7 +85,8 @@ export const uploadToCloudinary = (fileBuffer, folder = 'memora', fileMeta = {})
       (error, result) => {
         if (error) {
           console.error('[Cloudinary Upload Error]', error);
-          return reject(new Error(error.message || 'Image upload to Cloudinary failed.'));
+          console.warn('[Upload Fallback] Cloudinary stream failed, falling back to local file storage.');
+          return saveLocally();
         }
         resolve({
           secure_url: result.secure_url,
@@ -93,44 +105,47 @@ export const uploadToCloudinary = (fileBuffer, folder = 'memora', fileMeta = {})
  * @returns {Promise<any>}
  */
 export const deleteFromCloudinary = async (publicId) => {
-  if (!publicId) return;
-
-  // Local storage cleanup
-  if (publicId.startsWith('local_uploads/')) {
-    try {
-      const mockPrefix = publicId.replace('local_uploads/', '');
-      const files = fs.readdirSync(uploadsDir);
-      for (const file of files) {
-        if (file.startsWith(mockPrefix)) {
-          fs.unlinkSync(path.join(uploadsDir, file));
-        }
-      }
-    } catch {
-      // Ignore local cleanup error
-    }
-    return { result: 'ok' };
-  }
-
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
-  const isMock =
-    !apiKey ||
-    !cloudName ||
-    !apiSecret ||
-    apiKey === '123456789012345' ||
-    apiKey === 'your_cloudinary_api_key' ||
-    apiKey === 'your_api_key_here' ||
-    cloudName === 'demo_cloud' ||
-    cloudName === 'your_cloud_name';
-
-  if (isMock) {
-    return { result: 'ok' };
-  }
+  if (!publicId) return { result: 'ok' };
 
   try {
+    // Local storage cleanup
+    if (publicId.startsWith('local_uploads/')) {
+      const mockPrefix = publicId.replace('local_uploads/', '');
+      if (fs.existsSync(uploadsDir)) {
+        const files = fs.readdirSync(uploadsDir);
+        for (const file of files) {
+          if (file.startsWith(mockPrefix)) {
+            try {
+              fs.unlinkSync(path.join(uploadsDir, file));
+            } catch {
+              // Ignore individual unlink errors
+            }
+          }
+        }
+      }
+      return { result: 'ok' };
+    }
+
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    const isMock =
+      !apiKey ||
+      !cloudName ||
+      !apiSecret ||
+      apiKey === '123456789012345' ||
+      apiKey === 'your_cloudinary_api_key' ||
+      apiKey === 'your_api_key_here' ||
+      cloudName === 'demo_cloud' ||
+      cloudName === 'your_cloud_name';
+
+    if (isMock) {
+      return { result: 'ok' };
+    }
+
     return await cloudinary.uploader.destroy(publicId);
   } catch (error) {
-    console.error(`[Cloudinary Destroy Error] Failed to delete image ${publicId}:`, error.message);
+    console.error(`[Cloudinary Destroy Safe Warning] Failed to delete image ${publicId}:`, error.message);
+    return { result: 'ok' };
   }
 };
