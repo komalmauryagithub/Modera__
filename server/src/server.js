@@ -46,7 +46,8 @@ app.use(
         return origin === allowed || origin.endsWith(allowed.replace(/^https?:\/\//, ''));
       });
 
-      if (isAllowed || process.env.NODE_ENV !== 'production') {
+      // If no production CLIENT_URL configured, allow all origins
+      if (!origin || isAllowed || configuredClientUrls.length === 0 || process.env.NODE_ENV !== 'production') {
         return callback(null, true);
       }
 
@@ -59,8 +60,8 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Health Check Route
-app.get('/api/health', (req, res) => {
+// Health Check Route (supports both /api/health and /health)
+app.get(['/api/health', '/health'], (req, res) => {
   res.status(200).json({
     success: true,
     message: 'MEMORA API is healthy and operational.',
@@ -84,9 +85,9 @@ app.get('/api', (req, res) => {
   });
 });
 
-// Mount Application Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/events', eventRoutes);
+// Mount Application Routes (support both /api/auth and direct /auth, /api/events and direct /events)
+app.use(['/api/auth', '/auth'], authRoutes);
+app.use(['/api/events', '/events'], eventRoutes);
 
 // Optional & Uploads static routing
 const __filename = fileURLToPath(import.meta.url);
