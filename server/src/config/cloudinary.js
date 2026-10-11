@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Auto-parse CLOUDINARY_URL if provided
-if (process.env.CLOUDINARY_URL && (!process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_CLOUD_NAME)) {
+if (process.env.CLOUDINARY_URL) {
   try {
     const parsed = new URL(process.env.CLOUDINARY_URL.replace(/^cloudinary:\/\//, 'http://'));
     if (parsed.username) process.env.CLOUDINARY_API_KEY = parsed.username;
