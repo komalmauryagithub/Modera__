@@ -72,6 +72,16 @@ export const uploadToCloudinary = (fileBuffer, folder = 'memora', fileMeta = {})
       return saveLocally();
     }
 
+    // Ensure Cloudinary SDK is initialized with latest credentials
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+      secure: true,
+    });
+
+    console.log(`[Cloudinary Upload] Initiating upload to folder: "${folder}" using cloud: "${cloudName}"`);
+
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
