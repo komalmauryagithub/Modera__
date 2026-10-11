@@ -8,12 +8,15 @@ import { connectDB } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
+import { syncLocalImagesToCloudinary } from './utils/cloudinaryHelper.js';
 
 // Load environment variables
 dotenv.config();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB and sync images to Cloudinary
+connectDB().then(() => {
+  syncLocalImagesToCloudinary();
+});
 
 const app = express();
 

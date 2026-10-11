@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Readable } from 'stream';
 import cloudinary from '../config/cloudinary.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -95,8 +96,7 @@ export const uploadToCloudinary = (fileBuffer, folder = 'memora', fileMeta = {})
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
-        resource_type: 'image',
-        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        resource_type: 'auto',
         transformation: [
           { width: 1600, height: 1600, crop: 'limit' },
           { quality: 'auto', fetch_format: 'auto' },
@@ -108,6 +108,7 @@ export const uploadToCloudinary = (fileBuffer, folder = 'memora', fileMeta = {})
           console.warn('[Upload Fallback] Cloudinary stream failed, falling back to local file storage.');
           return saveLocally();
         }
+        console.log(`[Cloudinary Upload Success] Saved to: ${result.secure_url}`);
         resolve({
           secure_url: result.secure_url,
           public_id: result.public_id,
@@ -115,8 +116,53 @@ export const uploadToCloudinary = (fileBuffer, folder = 'memora', fileMeta = {})
       }
     );
 
-    uploadStream.end(fileBuffer);
+    Readable.from(fileBuffer).pipe(uploadStream);
   });
+};
+
+/**
+ * Auto-sync existing local mock uploads to Cloudinary when credentials become active
+ */
+export const syncLocalImagesToCloudinary = async () => {
+  const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+  const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim().replace(/^['"]|['"]$/g, '');
+  const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim().replace(/^['"]|['"]$/g, '');
+
+  if (!apiKey || apiKey === '123456789012345' || !cloudName || !apiSecret) {
+    return;
+  }
+
+  try {
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+      secure: true,
+    });
+
+    const Event = (await import('../models/Event.js')).default;
+    const mockEvents = await Event.find({
+      imageUrl: { $regex: '/uploads/mock_' },
+    });
+
+    for (const ev of mockEvents) {
+      try {
+        console.log(`[Cloudinary Auto-Sync] Uploading "${ev.title}" to Cloudinary memora folder...`);
+        const result = await cloudinary.uploader.upload(ev.imageUrl, {
+          folder: 'memora',
+          resource_type: 'auto',
+        });
+        ev.imageUrl = result.secure_url;
+        ev.imagePublicId = result.public_id;
+        await ev.save();
+        console.log(`[Cloudinary Auto-Sync Success] "${ev.title}" moved to Cloudinary: ${result.secure_url}`);
+      } catch (err) {
+        console.warn(`[Cloudinary Auto-Sync Warning] Could not sync "${ev.title}":`, err.message);
+      }
+    }
+  } catch (err) {
+    console.error('[Cloudinary Auto-Sync Error]', err.message);
+  }
 };
 
 /**
