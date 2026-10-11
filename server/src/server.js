@@ -9,6 +9,7 @@ import authRoutes from './routes/authRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import { syncLocalImagesToCloudinary } from './utils/cloudinaryHelper.js';
+import cloudinary from './config/cloudinary.js';
 
 // Load environment variables
 dotenv.config();
@@ -84,6 +85,45 @@ app.get(['/api/health', '/health'], (req, res) => {
       hasCloudinaryUrl,
     },
   });
+});
+
+// Cloudinary Live Diagnostic Endpoint
+app.get('/api/test-cloudinary', async (req, res) => {
+  try {
+    const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim().replace(/^['"]|['"]$/g, '');
+    const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+    const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim().replace(/^['"]|['"]$/g, '');
+
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+      secure: true,
+    });
+
+    // 1x1 test pixel
+    const test1x1Pixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const uploadResult = await cloudinary.uploader.upload(test1x1Pixel, {
+      folder: 'memora',
+      public_id: `diagnostic_test_${Date.now()}`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Cloudinary upload succeeded!',
+      cloudName,
+      apiKeyPrefix: apiKey ? apiKey.substring(0, 4) + '...' : 'none',
+      uploadResult,
+    });
+  } catch (err) {
+    return res.status(400).json({
+      success: false,
+      message: 'Cloudinary upload failed!',
+      error: err.message,
+      http_code: err.http_code,
+      details: err,
+    });
+  }
 });
 
 // Root API information route
