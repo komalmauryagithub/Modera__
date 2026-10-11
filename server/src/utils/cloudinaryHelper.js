@@ -21,10 +21,20 @@ if (!fs.existsSync(uploadsDir)) {
  */
 export const uploadToCloudinary = (fileBuffer, folder = 'memora', fileMeta = {}) => {
   return new Promise((resolve, reject) => {
-    // If mock/placeholder credentials detected in dev/test, save file locally and return local URL
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    // Auto-parse CLOUDINARY_URL if present
+    if (process.env.CLOUDINARY_URL && (!process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_CLOUD_NAME)) {
+      try {
+        const parsed = new URL(process.env.CLOUDINARY_URL.replace(/^cloudinary:\/\//, 'http://'));
+        if (parsed.username) process.env.CLOUDINARY_API_KEY = parsed.username;
+        if (parsed.password) process.env.CLOUDINARY_API_SECRET = parsed.password;
+        if (parsed.hostname) process.env.CLOUDINARY_CLOUD_NAME = parsed.hostname;
+      } catch {}
+    }
+
+    // Clean whitespace/quotes
+    const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+    const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim().replace(/^['"]|['"]$/g, '');
+    const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim().replace(/^['"]|['"]$/g, '');
 
     const isMock =
       !apiKey ||
@@ -136,9 +146,9 @@ export const deleteFromCloudinary = async (publicId) => {
       return { result: 'ok' };
     }
 
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+    const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim().replace(/^['"]|['"]$/g, '');
+    const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim().replace(/^['"]|['"]$/g, '');
     const isMock =
       !apiKey ||
       !cloudName ||

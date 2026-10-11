@@ -62,12 +62,24 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health Check Route (supports both /api/health and /health)
 app.get(['/api/health', '/health'], (req, res) => {
+  const hasCloudName = Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'demo_cloud');
+  const hasApiKey = Boolean(process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_KEY !== '123456789012345');
+  const hasApiSecret = Boolean(process.env.CLOUDINARY_API_SECRET && process.env.CLOUDINARY_API_SECRET !== 'sample_secret_key');
+  const hasCloudinaryUrl = Boolean(process.env.CLOUDINARY_URL);
+
   res.status(200).json({
     success: true,
     message: 'MEMORA API is healthy and operational.',
     tagline: 'Every Date Has a Story.',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
+    cloudinary: {
+      isConfigured: (hasCloudName && hasApiKey && hasApiSecret) || hasCloudinaryUrl,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME || (hasCloudinaryUrl ? 'configured_via_url' : 'not_set'),
+      hasApiKey,
+      hasApiSecret,
+      hasCloudinaryUrl,
+    },
   });
 });
 
