@@ -19,15 +19,22 @@ if (!fs.existsSync(uploadsDir)) {
  * @param {object} fileMeta - Metadata including mimetype
  * @returns {Promise<{ secure_url: string, public_id: string }>}
  */
-export const uploadToCloudinary = (fileBuffer, folder = 'memora_events', fileMeta = {}) => {
+export const uploadToCloudinary = (fileBuffer, folder = 'memora', fileMeta = {}) => {
   return new Promise((resolve, reject) => {
-    // If mock credentials detected in dev/test, save file locally and return local URL
+    // If mock/placeholder credentials detected in dev/test, save file locally and return local URL
     const apiKey = process.env.CLOUDINARY_API_KEY;
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
     const isMock =
       !apiKey ||
+      !cloudName ||
+      !apiSecret ||
       apiKey === '123456789012345' ||
       apiKey === 'your_cloudinary_api_key' ||
-      apiKey === 'your_api_key_here';
+      apiKey === 'your_api_key_here' ||
+      cloudName === 'demo_cloud' ||
+      cloudName === 'your_cloud_name';
 
     if (isMock) {
       const ext = fileMeta?.mimetype
@@ -88,15 +95,8 @@ export const uploadToCloudinary = (fileBuffer, folder = 'memora_events', fileMet
 export const deleteFromCloudinary = async (publicId) => {
   if (!publicId) return;
 
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const isMock =
-    !apiKey ||
-    apiKey === '123456789012345' ||
-    apiKey === 'your_cloudinary_api_key' ||
-    apiKey === 'your_api_key_here' ||
-    publicId.startsWith('local_uploads/');
-
-  if (isMock) {
+  // Local storage cleanup
+  if (publicId.startsWith('local_uploads/')) {
     try {
       const mockPrefix = publicId.replace('local_uploads/', '');
       const files = fs.readdirSync(uploadsDir);
@@ -108,6 +108,23 @@ export const deleteFromCloudinary = async (publicId) => {
     } catch {
       // Ignore local cleanup error
     }
+    return { result: 'ok' };
+  }
+
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  const isMock =
+    !apiKey ||
+    !cloudName ||
+    !apiSecret ||
+    apiKey === '123456789012345' ||
+    apiKey === 'your_cloudinary_api_key' ||
+    apiKey === 'your_api_key_here' ||
+    cloudName === 'demo_cloud' ||
+    cloudName === 'your_cloud_name';
+
+  if (isMock) {
     return { result: 'ok' };
   }
 

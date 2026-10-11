@@ -69,7 +69,7 @@ export const createEvent = async (req, res, next) => {
 
     if (req.file) {
       try {
-        const uploadResult = await uploadToCloudinary(req.file.buffer, 'memora_events', {
+        const uploadResult = await uploadToCloudinary(req.file.buffer, 'memora', {
           mimetype: req.file.mimetype,
           originalname: req.file.originalname,
         });
@@ -332,7 +332,7 @@ export const updateEvent = async (req, res, next) => {
     if (req.file) {
       // Replaced with a new photo
       try {
-        const uploadResult = await uploadToCloudinary(req.file.buffer, 'memora_events', {
+        const uploadResult = await uploadToCloudinary(req.file.buffer, 'memora', {
           mimetype: req.file.mimetype,
           originalname: req.file.originalname,
         });
