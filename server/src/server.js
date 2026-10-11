@@ -95,44 +95,33 @@ app.get('/api/test-cloudinary', async (req, res) => {
     const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
     const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim().replace(/^['"]|['"]$/g, '');
 
-    const timestamp = Math.floor(Date.now() / 1000);
-    const folder = 'memora';
-    const strToSign = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
-    const signature = crypto.createHash('sha1').update(strToSign).digest('hex');
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+      secure: true,
+    });
 
     const test1x1Pixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
-    const formData = new URLSearchParams();
-    formData.append('file', test1x1Pixel);
-    formData.append('api_key', apiKey);
-    formData.append('timestamp', timestamp.toString());
-    formData.append('folder', folder);
-    formData.append('signature', signature);
-
-    const rawResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: 'POST',
-      body: formData,
+    const result = await cloudinary.uploader.upload(test1x1Pixel, {
+      folder: 'memora',
+      resource_type: 'auto',
     });
 
-    const status = rawResponse.status;
-    const bodyText = await rawResponse.text();
-    let bodyJson = null;
-    try {
-      bodyJson = JSON.parse(bodyText);
-    } catch {}
-
-    return res.status(status === 200 ? 200 : 400).json({
-      success: status === 200,
-      cloudinaryStatus: status,
-      rawBody: bodyJson || bodyText,
+    return res.status(200).json({
+      success: true,
+      message: 'Cloudinary upload succeeded!',
+      result,
       cloudName,
       apiKeyPrefix: apiKey ? apiKey.substring(0, 4) + '...' : 'none',
-      apiSecretLength: apiSecret ? apiSecret.length : 0,
     });
   } catch (err) {
-    return res.status(500).json({
+    return res.status(400).json({
       success: false,
-      error: err.message,
+      message: err.message,
+      http_code: err.http_code,
+      errorDetails: err,
     });
   }
 });
